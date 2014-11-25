@@ -29,7 +29,11 @@ class Register:public QWidget
 		Register(QWidget *parent = 0);
 	private:
 		QPushButton *createButton(const QString &text, const char *member);
-		
+	private slots:
+		void okClicked();
+	signals:
+		void cancelClicked();	
+		void passwordChanged();
 	
 };
 
@@ -44,8 +48,10 @@ class Welcome:public QWidget
 	private:
 		QPushButton *createButton(const QString &text, const char *member);
 		QLabel *myLabel;
-		
-	
+	signals:
+		void changePasswordClicked();
+		void startGameClicked();
+		void exitClicked();
 };
 
 class ChangePassword:public QWidget
@@ -56,7 +62,11 @@ class ChangePassword:public QWidget
 		ChangePassword(QWidget *parent = 0);
 	private:
 		QPushButton *createButton(const QString &text, const char *member);
-		
+	private slots:
+		void okClicked();
+	signals:
+		void cancelClicked();	
+		void passwordChanged();
 	
 };
 
@@ -82,6 +92,9 @@ class MainWindow:public QWidget
 	private slots:
 		void exitMain();
 		void switchToWelcome();
+		void switchToChangePassword();
+		void switchToRegister();
+		void switchToLogin();
 };
 
 
