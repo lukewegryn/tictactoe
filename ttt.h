@@ -11,9 +11,13 @@ class Login:public QWidget
 		QGridLayout *loginLayout;
 	private:
 		QPushButton *createButton(const QString &text, const char *member);
+		QLineEdit *username;
+		QLineEdit *password;
 	signals:
-		void loginClicked();
 		void exitClicked();
+		void loginSuccessful();
+	private slots:
+		void loginClicked();
 
 };
 
@@ -36,8 +40,10 @@ class Welcome:public QWidget
 	public:
 		Welcome(QWidget *parent = 0);
 		QGridLayout *welcomeLayout;
+		void setText(QString);
 	private:
 		QPushButton *createButton(const QString &text, const char *member);
+		QLabel *myLabel;
 		
 	
 };
@@ -72,6 +78,7 @@ class MainWindow:public QWidget
 		MainWindow(QWidget *parent = 0);
 	private:
 		QStackedWidget *stackedWidget; 
+		Welcome *myWelcome;
 	private slots:
 		void exitMain();
 		void switchToWelcome();
