@@ -20,16 +20,21 @@ MainWindow::MainWindow(QWidget *parent):QWidget(parent)
 
 	QAction *registerAction = userMenu->addAction(tr("Register User"));
 	QAction *logoutAction = userMenu->addAction(tr("Logout User"));
+	QAction *newGameAction = gameMenu->addAction(tr("New Game"));
+	QAction *endGameAction = gameMenu->addAction(tr("End Game"));
+	QAction *changePasswordAction = editMenu->addAction(tr("Change Password"));
 	//QAction *exitAction = userMenu->addAction(tr("E&xit"));
 	menuBar->addMenu(userMenu);
 	menuBar->addMenu(gameMenu);
 	menuBar->addMenu(editMenu);
 
 	QGridLayout *layout = new QGridLayout;
-	Login *myLogin = new Login;
+
+	myLogin = new Login;
 	myWelcome = new Welcome;
 	ChangePassword *myChangePassword = new ChangePassword;
 	Register *myRegister = new Register;
+
 	stackedWidget = new QStackedWidget;
 
 	connect(myLogin, SIGNAL(exitClicked()), this, SLOT(exitMain()));
@@ -39,7 +44,9 @@ MainWindow::MainWindow(QWidget *parent):QWidget(parent)
 	connect(myChangePassword, SIGNAL(cancelClicked()), this, SLOT(switchToWelcome()));
 	connect(registerAction, SIGNAL(triggered()), this, SLOT(switchToRegister()));
 	connect(myRegister, SIGNAL(cancelClicked()), this, SLOT(switchToLogin()));
-	
+	connect(this, SIGNAL(clearLogin()), myLogin, SLOT(clearLogin()));
+	connect(logoutAction, SIGNAL(triggered()), this, SLOT(switchToLogin()));
+	connect(changePasswordAction, SIGNAL(triggered()), this, SLOT(switchToChangePassword()));
 	stackedWidget->addWidget(myLogin);
 	stackedWidget->addWidget(myWelcome);
 	stackedWidget->addWidget(myChangePassword);
@@ -60,6 +67,7 @@ void MainWindow::exitMain()
 
 void MainWindow::switchToLogin()
 {
+	emit clearLogin();
 	stackedWidget->setCurrentIndex(0);
 }
 
@@ -111,6 +119,18 @@ void Login::loginClicked()
 	{
 		emit loginSuccessful();
 	}
+	else{
+		QMessageBox msgBox;
+		msgBox.setText("That is an incorrect username/password combination.");
+		msgBox.exec();
+		msgBox.show();
+	}
+}
+
+void Login::clearLogin()
+{
+	username->setText("");
+	password->setText("");
 }
 /***********************************Register******************************************/
 
@@ -120,9 +140,9 @@ Register::Register(QWidget *parent):QWidget(parent)
 
 	QPushButton *okButton = createButton(tr("OK"),SLOT(okClicked()));
 	QPushButton *cancelButton = createButton(tr("Cancel"),SIGNAL(cancelClicked()));
-	QLineEdit *username = new QLineEdit;
-	QLineEdit *newPassword = new QLineEdit;
-	QLineEdit *newPasswordAgain = new QLineEdit;
+	username = new QLineEdit;
+	newPassword = new QLineEdit;
+	newPasswordAgain = new QLineEdit;
 
 	QComboBox *combo = new QComboBox;
 	QListView *listView = new QListView(combo);
@@ -153,7 +173,13 @@ QPushButton *Register::createButton(const QString &text, const char *member)
 
 void Register::okClicked()
 {
-
+	if(newPassword->text() != newPasswordAgain->text())
+	{
+		QMessageBox msgBox;
+		msgBox.setText("The passwords do not match.");
+		msgBox.exec();
+		msgBox.show();
+	}
 }
 /**********************************Welcome*********************************************/
 Welcome::Welcome(QWidget *parent):QWidget(parent)

@@ -18,6 +18,7 @@ class Login:public QWidget
 		void loginSuccessful();
 	private slots:
 		void loginClicked();
+		void clearLogin();
 
 };
 
@@ -29,6 +30,9 @@ class Register:public QWidget
 		Register(QWidget *parent = 0);
 	private:
 		QPushButton *createButton(const QString &text, const char *member);
+		QLineEdit *username;
+		QLineEdit *newPassword;
+		QLineEdit *newPasswordAgain;
 	private slots:
 		void okClicked();
 	signals:
@@ -89,12 +93,15 @@ class MainWindow:public QWidget
 	private:
 		QStackedWidget *stackedWidget; 
 		Welcome *myWelcome;
+		Login *myLogin;
 	private slots:
 		void exitMain();
 		void switchToWelcome();
 		void switchToChangePassword();
 		void switchToRegister();
 		void switchToLogin();
+	signals:
+		void clearLogin();
 };
 
 
