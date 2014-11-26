@@ -97,7 +97,15 @@ void MainWindow::switchToWelcome()
 
 void MainWindow::switchToChangePassword()
 {
-	stackedWidget->setCurrentIndex(2);
+	if(currentUser.name != NULL)
+		stackedWidget->setCurrentIndex(2);
+	else
+	{
+		QMessageBox msgBox;
+		msgBox.setText("You need to log in before you can change the password!");
+		msgBox.exec();
+		msgBox.show();
+	}
 }
 
 void MainWindow::switchToRegister()
