@@ -20,6 +20,7 @@ MainWindow::MainWindow(QWidget *parent):QWidget(parent)
 	passFile = new QFile("passwords.dat");
 	passFile->open(QIODevice::ReadWrite);
 	outStream = new QDataStream(passFile);
+	extractFromDataStream(*outStream);
 	/*myData->colors.append(QString("Green"));
 	myData->passwords["admin"] = QString("password").toUtf8();
 	insertToDataStream(*outStream);*/
@@ -54,6 +55,7 @@ MainWindow::MainWindow(QWidget *parent):QWidget(parent)
 	connect(myChangePassword, SIGNAL(cancelClicked()), this, SLOT(switchToWelcome()));
 	connect(registerAction, SIGNAL(triggered()), this, SLOT(switchToRegister()));
 	connect(myRegister, SIGNAL(cancelClicked()), this, SLOT(switchToLogin()));
+	connect(myRegister, SIGNAL(passwordChanged()), this, SLOT(switchToLogin()));
 	connect(this, SIGNAL(clearLogin()), myLogin, SLOT(clearLogin()));
 	connect(logoutAction, SIGNAL(triggered()), this, SLOT(switchToLogin()));
 	connect(changePasswordAction, SIGNAL(triggered()), this, SLOT(switchToChangePassword()));
@@ -143,7 +145,7 @@ QPushButton *Login::createButton(const QString &text, const char *member)
 void Login::loginClicked()
 {
 	currentUser.name = username->text();
-	if(username->text() == "admin" && password->text() == "password")
+	if(myData->passwords[username->text()] == password->text().toUtf8())
 	{
 		emit loginSuccessful();
 	}
@@ -172,7 +174,7 @@ Register::Register(QWidget *parent):QWidget(parent)
 	newPassword = new QLineEdit;
 	newPasswordAgain = new QLineEdit;
 
-	QComboBox *combo = new QComboBox;
+	combo = new QComboBox;
 	QListView *listView = new QListView(combo);
 	combo->addItem("Red");
 	combo->addItem("Blue");
@@ -210,7 +212,10 @@ void Register::okClicked()
 	}
 
 	else{
-
+		myData->colors.append(combo->currentText());
+		myData->passwords[username->text()] = newPassword->text().toUtf8();
+		emit goWriteDatabaseToFile();
+		emit passwordChanged();
 	}
 }
 /**********************************Welcome*********************************************/

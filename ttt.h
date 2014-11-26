@@ -44,6 +44,7 @@ class Register:public QWidget
 		QLineEdit *username;
 		QLineEdit *newPassword;
 		QLineEdit *newPasswordAgain;
+		QComboBox *combo;
 	private slots:
 		void okClicked();
 	signals:
