@@ -5,14 +5,24 @@
 #include <QLineEdit>
 #include <QMenu>
 #include <QMenuBar>
-struct User {
+#include <QFile>
+
+struct User{
 	QString name;
 };
-
 User currentUser;
+Database *myData = new Database;
+
+/**************************MainWindow**************************************/
 
 MainWindow::MainWindow(QWidget *parent):QWidget(parent)
 {
+	passFile = new QFile("passwords.dat");
+	passFile->open(QIODevice::ReadWrite);
+	outStream = new QDataStream(passFile);
+	/*myData->colors.append(QString("Green"));
+	myData->passwords["admin"] = QString("password").toUtf8();
+	insertToDataStream(*outStream);*/
 	QMenuBar *menuBar = new QMenuBar(this);
 	QMenu *userMenu = new QMenu(tr("&User"), this);
 	QMenu *gameMenu = new QMenu(tr("&Game"), this);
@@ -47,6 +57,7 @@ MainWindow::MainWindow(QWidget *parent):QWidget(parent)
 	connect(this, SIGNAL(clearLogin()), myLogin, SLOT(clearLogin()));
 	connect(logoutAction, SIGNAL(triggered()), this, SLOT(switchToLogin()));
 	connect(changePasswordAction, SIGNAL(triggered()), this, SLOT(switchToChangePassword()));
+	connect(myRegister, SIGNAL(goWriteDatabaseToFile()), this, SLOT(writeDatabaseToFile()));
 	stackedWidget->addWidget(myLogin);
 	stackedWidget->addWidget(myWelcome);
 	stackedWidget->addWidget(myChangePassword);
@@ -75,7 +86,6 @@ void MainWindow::switchToWelcome()
 {
 	myWelcome->setText(currentUser.name);
 	stackedWidget->setCurrentIndex(1);
-	//setLayout(myWelcome->welcomeLayout);
 }
 
 void MainWindow::switchToChangePassword()
@@ -86,6 +96,24 @@ void MainWindow::switchToChangePassword()
 void MainWindow::switchToRegister()
 {
 	stackedWidget->setCurrentIndex(3);
+}
+
+void MainWindow::insertToDataStream(QDataStream& dataStream)
+{
+	dataStream.setVersion(QDataStream::Qt_4_6);
+	dataStream << myData->colors;
+	dataStream << myData->passwords;
+}
+void MainWindow::extractFromDataStream(QDataStream& dataStream)
+{
+	dataStream.setVersion(QDataStream::Qt_4_6);
+	dataStream >> myData->colors;
+	dataStream >> myData->passwords;
+}
+
+void MainWindow::writeDatabaseToFile()
+{
+	insertToDataStream(*outStream);
 }
 /***********************************Login******************************************/
 Login::Login(QWidget *parent):QWidget(parent)
@@ -179,6 +207,10 @@ void Register::okClicked()
 		msgBox.setText("The passwords do not match.");
 		msgBox.exec();
 		msgBox.show();
+	}
+
+	else{
+
 	}
 }
 /**********************************Welcome*********************************************/

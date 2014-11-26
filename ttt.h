@@ -2,6 +2,17 @@
 #define TTT_H
 #include <QtWidgets>
 #include <QPushButton>
+
+class Database
+{
+	public:
+		QList<QString> colors;
+		QHash<QString, QByteArray> passwords;
+};
+
+QDataStream & operator<< (QDataStream& dataStream, const Database& database);
+QDataStream & operator>> (QDataStream& dataStream, Database& database);
+
 class Login:public QWidget
 {
 	Q_OBJECT
@@ -38,6 +49,7 @@ class Register:public QWidget
 	signals:
 		void cancelClicked();	
 		void passwordChanged();
+		void goWriteDatabaseToFile();
 	
 };
 
@@ -94,12 +106,17 @@ class MainWindow:public QWidget
 		QStackedWidget *stackedWidget; 
 		Welcome *myWelcome;
 		Login *myLogin;
+		QFile *passFile;
+		QDataStream *outStream;
+		void insertToDataStream(QDataStream& dataStream);
+		void extractFromDataStream(QDataStream& dataStream);
 	private slots:
 		void exitMain();
 		void switchToWelcome();
 		void switchToChangePassword();
 		void switchToRegister();
 		void switchToLogin();
+		void writeDatabaseToFile();
 	signals:
 		void clearLogin();
 };
