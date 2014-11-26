@@ -17,13 +17,9 @@ Database *myData = new Database;
 
 MainWindow::MainWindow(QWidget *parent):QWidget(parent)
 {
-	passFile = new QFile("passwords.dat");
-	passFile->open(QIODevice::ReadWrite);
-	outStream = new QDataStream(passFile);
-	extractFromDataStream(*outStream);
+	extractFromDataStream();
 	/*myData->colors.append(QString("Green"));
-	myData->passwords["admin"] = QString("password").toUtf8();
-	insertToDataStream(*outStream);*/
+	myData->passwords["admin"] = QString("password").toUtf8();*/
 	QMenuBar *menuBar = new QMenuBar(this);
 	QMenu *userMenu = new QMenu(tr("&User"), this);
 	QMenu *gameMenu = new QMenu(tr("&Game"), this);
@@ -100,22 +96,34 @@ void MainWindow::switchToRegister()
 	stackedWidget->setCurrentIndex(3);
 }
 
-void MainWindow::insertToDataStream(QDataStream& dataStream)
+void MainWindow::insertToDataStream()
 {
+	QFile passFile("passwords.dat");
+	passFile.open(QIODevice::WriteOnly);
+	QDataStream dataStream(&passFile);
+
 	dataStream.setVersion(QDataStream::Qt_4_6);
 	dataStream << myData->colors;
 	dataStream << myData->passwords;
+
+	passFile.close();
 }
-void MainWindow::extractFromDataStream(QDataStream& dataStream)
+void MainWindow::extractFromDataStream()
 {
+	QFile passFile("passwords.dat");
+	passFile.open(QIODevice::ReadOnly);
+	QDataStream dataStream(&passFile);
+
 	dataStream.setVersion(QDataStream::Qt_4_6);
 	dataStream >> myData->colors;
 	dataStream >> myData->passwords;
+
+	passFile.close();
 }
 
 void MainWindow::writeDatabaseToFile()
 {
-	insertToDataStream(*outStream);
+	insertToDataStream();
 }
 /***********************************Login******************************************/
 Login::Login(QWidget *parent):QWidget(parent)

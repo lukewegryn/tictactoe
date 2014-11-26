@@ -107,10 +107,10 @@ class MainWindow:public QWidget
 		QStackedWidget *stackedWidget; 
 		Welcome *myWelcome;
 		Login *myLogin;
-		QFile *passFile;
-		QDataStream *outStream;
-		void insertToDataStream(QDataStream& dataStream);
-		void extractFromDataStream(QDataStream& dataStream);
+		//QFile *passFile;
+		//QDataStream *outStream;
+		void insertToDataStream();
+		void extractFromDataStream();
 	private slots:
 		void exitMain();
 		void switchToWelcome();
