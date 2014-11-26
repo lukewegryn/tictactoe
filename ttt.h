@@ -47,6 +47,7 @@ class Register:public QWidget
 		QComboBox *combo;
 	private slots:
 		void okClicked();
+		void clear();
 	signals:
 		void cancelClicked();	
 		void passwordChanged();
@@ -85,6 +86,7 @@ class ChangePassword:public QWidget
 		QComboBox *combo;
 	private slots:
 		void okClicked();
+		void clear();
 	signals:
 		void cancelClicked();	
 		void passwordChanged();
@@ -125,6 +127,8 @@ class MainWindow:public QWidget
 		void writeDatabaseToFile();
 	signals:
 		void clearLogin();
+		void clearRegister();
+		void clearChangePassword();
 };
 
 

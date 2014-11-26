@@ -57,6 +57,8 @@ MainWindow::MainWindow(QWidget *parent):QWidget(parent)
 	connect(myRegister, SIGNAL(cancelClicked()), this, SLOT(switchToLogin()));
 	connect(myRegister, SIGNAL(passwordChanged()), this, SLOT(switchToLogin()));
 	connect(this, SIGNAL(clearLogin()), myLogin, SLOT(clearLogin()));
+	connect(this, SIGNAL(clearRegister()), myRegister, SLOT(clear()));
+	connect(this, SIGNAL(clearChangePassword()), myChangePassword, SLOT(clear()));
 	connect(logoutAction, SIGNAL(triggered()), this, SLOT(switchToLogin()));
 	connect(changePasswordAction, SIGNAL(triggered()), this, SLOT(switchToChangePassword()));
 	connect(myRegister, SIGNAL(goWriteDatabaseToFile()), this, SLOT(writeDatabaseToFile()));
@@ -81,11 +83,14 @@ void MainWindow::exitMain()
 void MainWindow::switchToLogin()
 {
 	emit clearLogin();
+	emit clearRegister();
 	stackedWidget->setCurrentIndex(0);
 }
 
 void MainWindow::switchToWelcome()
 {
+	emit clearLogin();
+	emit clearChangePassword();
 	myWelcome->setText(currentUser.name);
 	stackedWidget->setCurrentIndex(1);
 }
@@ -164,7 +169,7 @@ void Login::loginClicked()
 	}
 	else{
 		QMessageBox msgBox;
-		msgBox.setText("That is an incorrect username/password combination.");
+		msgBox.setText("The user/password combination does not match an existing user/password combination.");
 		msgBox.exec();
 		msgBox.show();
 	}
@@ -222,11 +227,17 @@ void Register::okClicked()
 	if(newPassword->text() != newPasswordAgain->text())
 	{
 		QMessageBox msgBox;
-		msgBox.setText("The passwords do not match.");
+		msgBox.setText("The password fields do not match eachother.");
 		msgBox.exec();
 		msgBox.show();
 	}
-
+	else if(myData->passwords.contains(username->text()))
+	{
+		QMessageBox msgBox;
+		msgBox.setText("A user with that name already exists.");
+		msgBox.exec();
+		msgBox.show();
+	}
 	else{
 		myData->colors[username->text()] = combo->currentText();
 		myData->passwords[username->text()] = QCryptographicHash::hash(newPassword->text().toUtf8(), QCryptographicHash::Sha1);
@@ -236,6 +247,13 @@ void Register::okClicked()
 		emit goWriteDatabaseToFile();
 		emit passwordChanged();
 	}
+}
+
+void Register::clear()
+{
+	username->setText("");
+	newPassword->setText("");
+	newPasswordAgain->setText("");
 }
 /**********************************Welcome*********************************************/
 Welcome::Welcome(QWidget *parent):QWidget(parent)
@@ -307,17 +325,26 @@ ChangePassword::ChangePassword(QWidget *parent):QWidget(parent)
 
 void ChangePassword::okClicked()
 {
-	if((newPassword->text() != newPasswordAgain->text()) || (QCryptographicHash::hash(oldPassword->text().toUtf8(), QCryptographicHash::Sha1) != myData->passwords[currentUser.name]))
+	if(newPassword->text() != newPasswordAgain->text())
 	{
 		QMessageBox msgBox;
-		msgBox.setText("The passwords do not match.");
+		msgBox.setText("The password fields do not match each other.");
 		msgBox.exec();
 		msgBox.show();
 	}
-
+	else if (QCryptographicHash::hash(oldPassword->text().toUtf8(), QCryptographicHash::Sha1) != myData->passwords[currentUser.name])
+	{
+		QMessageBox msgBox;
+		msgBox.setText("The old password field does not match the current password field.");
+		msgBox.exec();
+		msgBox.show();
+	}
 	else{
 		myData->colors[currentUser.name] = combo->currentText();
 		myData->passwords[currentUser.name] = QCryptographicHash::hash(newPassword->text().toUtf8(), QCryptographicHash::Sha1);
+		oldPassword->setText("");
+		newPassword->setText("");
+		newPasswordAgain->setText("");
 		emit goWriteDatabaseToFile();
 		emit passwordChanged();
 	}
@@ -328,6 +355,13 @@ QPushButton *ChangePassword::createButton(const QString &text, const char *membe
 	QPushButton *button = new QPushButton(text);
 	connect(button, SIGNAL(clicked()), this, member);
 	return button;
+}
+
+void ChangePassword::clear()
+{
+	oldPassword->setText("");
+	newPassword->setText("");
+	newPasswordAgain->setText("");
 }
 
 /**********************************Game***********************************************/
