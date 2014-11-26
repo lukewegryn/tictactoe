@@ -5,10 +5,12 @@
 #include <QLineEdit>
 #include <QMenu>
 #include <QMenuBar>
+#include <QCryptographicHash>
 #include <QFile>
 
 struct User{
 	QString name;
+	QString color;
 };
 User currentUser;
 Database *myData = new Database;
@@ -49,6 +51,8 @@ MainWindow::MainWindow(QWidget *parent):QWidget(parent)
 	connect(myWelcome, SIGNAL(exitClicked()), this, SLOT(exitMain()));
 	connect(myWelcome, SIGNAL(changePasswordClicked()), this, SLOT(switchToChangePassword()));
 	connect(myChangePassword, SIGNAL(cancelClicked()), this, SLOT(switchToWelcome()));
+	connect(myChangePassword, SIGNAL(goWriteDatabaseToFile()), this, SLOT(writeDatabaseToFile()));
+	connect(myChangePassword, SIGNAL(passwordChanged()), this, SLOT(switchToLogin()));
 	connect(registerAction, SIGNAL(triggered()), this, SLOT(switchToRegister()));
 	connect(myRegister, SIGNAL(cancelClicked()), this, SLOT(switchToLogin()));
 	connect(myRegister, SIGNAL(passwordChanged()), this, SLOT(switchToLogin()));
@@ -152,9 +156,10 @@ QPushButton *Login::createButton(const QString &text, const char *member)
 
 void Login::loginClicked()
 {
-	currentUser.name = username->text();
-	if(myData->passwords[username->text()] == password->text().toUtf8())
+	if(myData->passwords[username->text()] == QCryptographicHash::hash(password->text().toUtf8(), QCryptographicHash::Sha1))
 	{
+		currentUser.name = username->text();
+		currentUser.color = myData->colors[username->text()];
 		emit loginSuccessful();
 	}
 	else{
@@ -181,6 +186,9 @@ Register::Register(QWidget *parent):QWidget(parent)
 	username = new QLineEdit;
 	newPassword = new QLineEdit;
 	newPasswordAgain = new QLineEdit;
+
+	newPassword->setEchoMode(QLineEdit::Password);
+	newPasswordAgain->setEchoMode(QLineEdit::Password);
 
 	combo = new QComboBox;
 	QListView *listView = new QListView(combo);
@@ -220,8 +228,11 @@ void Register::okClicked()
 	}
 
 	else{
-		myData->colors.append(combo->currentText());
-		myData->passwords[username->text()] = newPassword->text().toUtf8();
+		myData->colors[username->text()] = combo->currentText();
+		myData->passwords[username->text()] = QCryptographicHash::hash(newPassword->text().toUtf8(), QCryptographicHash::Sha1);
+		username->setText("");
+		newPassword->setText("");
+		newPasswordAgain->setText("");
 		emit goWriteDatabaseToFile();
 		emit passwordChanged();
 	}
@@ -248,7 +259,7 @@ Welcome::Welcome(QWidget *parent):QWidget(parent)
 
 void Welcome::setText(QString value)
 {
-	myLabel->setText("Welcome, " + value);
+	myLabel->setText("Welcome, " + value + " Color: " + currentUser.color);
 }
 
 QPushButton *Welcome::createButton(const QString &text, const char *member)
@@ -266,11 +277,15 @@ ChangePassword::ChangePassword(QWidget *parent):QWidget(parent)
 
 	QPushButton *okButton = createButton(tr("OK"),SLOT(okClicked()));
 	QPushButton *cancelButton = createButton(tr("Cancel"),SIGNAL(cancelClicked()));
-	QLineEdit *oldPassword = new QLineEdit;
-	QLineEdit *newPassword = new QLineEdit;
-	QLineEdit *newPasswordAgain = new QLineEdit;
+	oldPassword = new QLineEdit;
+	newPassword = new QLineEdit;
+	newPasswordAgain = new QLineEdit;
 
-	QComboBox *combo = new QComboBox;
+	oldPassword->setEchoMode(QLineEdit::Password);
+	newPassword->setEchoMode(QLineEdit::Password);
+	newPasswordAgain->setEchoMode(QLineEdit::Password);
+
+	combo = new QComboBox;
 	QListView *listView = new QListView(combo);
 	combo->addItem("Red");
 	combo->addItem("Blue");
@@ -292,7 +307,20 @@ ChangePassword::ChangePassword(QWidget *parent):QWidget(parent)
 
 void ChangePassword::okClicked()
 {
-	emit passwordChanged();
+	if((newPassword->text() != newPasswordAgain->text()) || (QCryptographicHash::hash(oldPassword->text().toUtf8(), QCryptographicHash::Sha1) != myData->passwords[currentUser.name]))
+	{
+		QMessageBox msgBox;
+		msgBox.setText("The passwords do not match.");
+		msgBox.exec();
+		msgBox.show();
+	}
+
+	else{
+		myData->colors[currentUser.name] = combo->currentText();
+		myData->passwords[currentUser.name] = QCryptographicHash::hash(newPassword->text().toUtf8(), QCryptographicHash::Sha1);
+		emit goWriteDatabaseToFile();
+		emit passwordChanged();
+	}
 }
 
 QPushButton *ChangePassword::createButton(const QString &text, const char *member)

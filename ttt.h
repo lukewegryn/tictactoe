@@ -6,7 +6,7 @@
 class Database
 {
 	public:
-		QList<QString> colors;
+		QHash<QString, QString> colors;
 		QHash<QString, QByteArray> passwords;
 };
 
@@ -79,11 +79,16 @@ class ChangePassword:public QWidget
 		ChangePassword(QWidget *parent = 0);
 	private:
 		QPushButton *createButton(const QString &text, const char *member);
+		QLineEdit *oldPassword;
+		QLineEdit *newPassword;
+		QLineEdit *newPasswordAgain;
+		QComboBox *combo;
 	private slots:
 		void okClicked();
 	signals:
 		void cancelClicked();	
 		void passwordChanged();
+		void goWriteDatabaseToFile();
 	
 };
 
