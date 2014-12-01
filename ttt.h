@@ -115,9 +115,11 @@ class Game:public QWidget
 		Game(QWidget *parent = 0);
 	private:
 		QPushButton* createButton(const QString &text, const char *member);
-		LabelClick* createLabel();
+		LabelClick* createLabel(int i);
+		QList<LabelClick*> boardList;
+		QSignalMapper *signalMapper;
 	private slots:
-		void buttonClicked();
+		void buttonClicked(int);
 };
 
 class MainWindow:public QWidget

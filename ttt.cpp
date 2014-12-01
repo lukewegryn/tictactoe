@@ -218,7 +218,6 @@ Register::Register(QWidget *parent):QWidget(parent)
 	combo->addItem("Red");
 	combo->addItem("Blue");
 	combo->addItem("Green");
-	combo->addItem("Orange");
 	combo->setView(listView);
 	registerLayout->addWidget(new QLabel("Username: "),0,0,1,1);
 	registerLayout->addWidget(username,0,1,1,1);
@@ -326,7 +325,6 @@ ChangePassword::ChangePassword(QWidget *parent):QWidget(parent)
 	combo->addItem("Red");
 	combo->addItem("Blue");
 	combo->addItem("Green");
-	combo->addItem("Orange");
 	combo->setView(listView);
 	changePasswordLayout->addWidget(new QLabel("Password (old): "),0,0,1,1);
 	changePasswordLayout->addWidget(oldPassword,0,1,1,1);
@@ -387,27 +385,58 @@ void ChangePassword::clear()
 Game::Game(QWidget *parent):QWidget(parent)
 {
 	QGridLayout *gameLayout = new QGridLayout;
-	QImage topLeftEmpty;
-	topLeftEmpty.load("blank.png");
-	LabelClick *topLeftEmptyLabel = new LabelClick;
-	topLeftEmptyLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
-	connect(topLeftEmptyLabel, SIGNAL(clicked()), this, SLOT(buttonClicked()));
-	topLeftEmptyLabel->setPixmap(QPixmap::fromImage(topLeftEmpty));
-	gameLayout->addWidget(topLeftEmptyLabel,0,0,1,1);
+	signalMapper = new QSignalMapper(this);
+	for(int i = 0; i < 9; i++)
+	{
+		boardList.append(createLabel(i));
+	}
+	connect(signalMapper, SIGNAL(mapped(int)), this, SLOT(buttonClicked(int)));
+	gameLayout->addWidget(boardList[0],0,0,1,1);
+	gameLayout->addWidget(boardList[1],0,1,1,1);
+	gameLayout->addWidget(boardList[2],0,2,1,1);
+	gameLayout->addWidget(boardList[3],1,0,1,1);
+	gameLayout->addWidget(boardList[4],1,1,1,1);
+	gameLayout->addWidget(boardList[5],1,2,1,1);
+	gameLayout->addWidget(boardList[6],2,0,1,1);
+	gameLayout->addWidget(boardList[7],2,1,1,1);
+	gameLayout->addWidget(boardList[8],2,2,1,1);
+	gameLayout->addWidget(new QLabel("Score"), 0,3,1,2);
 	setLayout(gameLayout);
 }
 
-LabelClick* Game::createLabel()
+LabelClick* Game::createLabel(int i)
 {
-
+	QImage emptyImage;
+	emptyImage.load("blank.png");
+	LabelClick *squareLabel = new LabelClick;
+	squareLabel->setMaximumSize(50,50);
+	squareLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
+	squareLabel->setPixmap(QPixmap::fromImage(emptyImage));
+	signalMapper->setMapping(squareLabel,i);
+	connect(squareLabel, SIGNAL(clicked()), signalMapper, SLOT(map()));
+	return squareLabel;
 }
 
-void Game::buttonClicked()
+void Game::buttonClicked(int i)
 {
-		QMessageBox msgBox;
-		msgBox.setText("You clicked my label!");
+		/*QMessageBox msgBox;
+		QString text;
+		text.append("You clicked box ");
+		text.append(QString::number(i));
+		text.append(" !");
+		//text << "You clicked box "  << i << " !";
+		msgBox.setText(text);
 		msgBox.exec();
-		msgBox.show();
+		msgBox.show();*/
+		QImage xImage;
+		if(currentUser.color == "Red")
+			xImage.load("rx.png");
+		else if(currentUser.color == "Blue")
+			xImage.load("bx.png");
+		else //if(currentUser.color == "Green")
+			xImage.load("gx.png");
+		
+		boardList[i]->setPixmap(QPixmap::fromImage(xImage));
 
 }
 
