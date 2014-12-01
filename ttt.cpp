@@ -19,6 +19,7 @@ Database *myData = new Database;
 
 MainWindow::MainWindow(QWidget *parent):QWidget(parent)
 {
+	//setFixedSize(500, 500);
 	extractFromDataStream();
 	/*myData->colors.append(QString("Green"));
 	myData->passwords["admin"] = QString("password").toUtf8();*/
@@ -43,6 +44,7 @@ MainWindow::MainWindow(QWidget *parent):QWidget(parent)
 	myWelcome = new Welcome;
 	ChangePassword *myChangePassword = new ChangePassword;
 	Register *myRegister = new Register;
+	Game *myGame = new Game;
 
 	stackedWidget = new QStackedWidget;
 
@@ -56,6 +58,7 @@ MainWindow::MainWindow(QWidget *parent):QWidget(parent)
 	connect(registerAction, SIGNAL(triggered()), this, SLOT(switchToRegister()));
 	connect(myRegister, SIGNAL(cancelClicked()), this, SLOT(switchToLogin()));
 	connect(myRegister, SIGNAL(passwordChanged()), this, SLOT(switchToLogin()));
+	connect(myWelcome, SIGNAL(startGameClicked()), this, SLOT(switchToGame()));
 	connect(this, SIGNAL(clearLogin()), myLogin, SLOT(clearLogin()));
 	connect(this, SIGNAL(clearRegister()), myRegister, SLOT(clear()));
 	connect(this, SIGNAL(clearChangePassword()), myChangePassword, SLOT(clear()));
@@ -66,6 +69,7 @@ MainWindow::MainWindow(QWidget *parent):QWidget(parent)
 	stackedWidget->addWidget(myWelcome);
 	stackedWidget->addWidget(myChangePassword);
 	stackedWidget->addWidget(myRegister);
+	stackedWidget->addWidget(myGame);
 	stackedWidget->setCurrentWidget(myLogin);
 
 	layout->addWidget(stackedWidget);
@@ -113,6 +117,11 @@ void MainWindow::switchToRegister()
 	stackedWidget->setCurrentIndex(3);
 }
 
+void MainWindow::switchToGame()
+{
+	stackedWidget->setCurrentIndex(4);
+}
+
 void MainWindow::insertToDataStream()
 {
 	QFile passFile("passwords.dat");
@@ -151,6 +160,7 @@ Login::Login(QWidget *parent):QWidget(parent)
 	password = new QLineEdit;
 	password->setEchoMode(QLineEdit::Password);
 	loginLayout = new QGridLayout;
+	loginLayout->setColumnMinimumWidth(0, 150);
 	loginLayout->addWidget(new QLabel("Username: "), 0, 0, 1, 1);
 	loginLayout->addWidget(username, 0, 1, 1, 1);
 	loginLayout->addWidget(new QLabel("Password: "), 1, 0, 1, 1);
@@ -376,5 +386,38 @@ void ChangePassword::clear()
 
 Game::Game(QWidget *parent):QWidget(parent)
 {
-	
+	QGridLayout *gameLayout = new QGridLayout;
+	QImage topLeftEmpty;
+	topLeftEmpty.load("blank.png");
+	LabelClick *topLeftEmptyLabel = new LabelClick;
+	topLeftEmptyLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
+	connect(topLeftEmptyLabel, SIGNAL(clicked()), this, SLOT(buttonClicked()));
+	topLeftEmptyLabel->setPixmap(QPixmap::fromImage(topLeftEmpty));
+	gameLayout->addWidget(topLeftEmptyLabel,0,0,1,1);
+	setLayout(gameLayout);
+}
+
+LabelClick* Game::createLabel()
+{
+
+}
+
+void Game::buttonClicked()
+{
+		QMessageBox msgBox;
+		msgBox.setText("You clicked my label!");
+		msgBox.exec();
+		msgBox.show();
+
+}
+
+/*******************************Custom LabelClick Class********************************/
+
+LabelClick::LabelClick(QWidget *parent):QLabel(parent)
+{
+
+}
+void LabelClick::mousePressEvent(QMouseEvent* event)
+{
+	emit clicked();
 }

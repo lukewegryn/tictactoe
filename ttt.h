@@ -13,6 +13,19 @@ class Database
 QDataStream & operator<< (QDataStream& dataStream, const Database& database);
 QDataStream & operator>> (QDataStream& dataStream, Database& database);
 
+class LabelClick:public QLabel
+{
+	Q_OBJECT
+
+	public:
+		explicit LabelClick(QWidget *parent=0);
+	signals:
+		void clicked();
+	protected:
+		void mousePressEvent(QMouseEvent *event);
+
+};
+
 class Login:public QWidget
 {
 	Q_OBJECT
@@ -101,7 +114,10 @@ class Game:public QWidget
 	public:
 		Game(QWidget *parent = 0);
 	private:
-		QPushButton *createButton(const QString &text, const char *member);
+		QPushButton* createButton(const QString &text, const char *member);
+		LabelClick* createLabel();
+	private slots:
+		void buttonClicked();
 };
 
 class MainWindow:public QWidget
@@ -124,6 +140,7 @@ class MainWindow:public QWidget
 		void switchToChangePassword();
 		void switchToRegister();
 		void switchToLogin();
+		void switchToGame();
 		void writeDatabaseToFile();
 	signals:
 		void clearLogin();
