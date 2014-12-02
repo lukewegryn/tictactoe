@@ -125,6 +125,10 @@ class Game:public QWidget
 		QLabel *currentScore;
 	private slots:
 		void buttonClicked(int);
+		void endGame();
+		void newGame();
+	signals:
+		void endGameSwitchPanes();
 };
 
 class MainWindow:public QWidget
@@ -153,6 +157,7 @@ class MainWindow:public QWidget
 		void clearLogin();
 		void clearRegister();
 		void clearChangePassword();
+		void endGame();
 };
 
 

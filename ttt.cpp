@@ -64,6 +64,9 @@ MainWindow::MainWindow(QWidget *parent):QWidget(parent)
 	connect(logoutAction, SIGNAL(triggered()), this, SLOT(switchToLogin()));
 	connect(changePasswordAction, SIGNAL(triggered()), this, SLOT(switchToChangePassword()));
 	connect(myRegister, SIGNAL(goWriteDatabaseToFile()), this, SLOT(writeDatabaseToFile()));
+	connect(myGame, SIGNAL(endGameSwitchPanes()), this, SLOT(switchToWelcome()));
+	connect(newGameAction, SIGNAL(triggered()), myGame, SLOT(newGame()));
+	connect(endGameAction, SIGNAL(triggered()), myGame, SLOT(endGame()));
 	stackedWidget->addWidget(myLogin);
 	stackedWidget->addWidget(myWelcome);
 	stackedWidget->addWidget(myChangePassword);
@@ -384,6 +387,8 @@ void ChangePassword::clear()
 Game::Game(QWidget *parent):QWidget(parent)
 {
 	QGridLayout *gameLayout = new QGridLayout;
+	QPushButton *endGameButton = new QPushButton("End Game");
+	connect(endGameButton, SIGNAL(clicked()), this, SLOT(endGame()));
 	signalMapper = new QSignalMapper(this);
 	numberOfPlays = 0;
 	QLabel *scoreLabel = new QLabel("Score");
@@ -414,7 +419,7 @@ Game::Game(QWidget *parent):QWidget(parent)
 	gameLayout->addWidget(scoreLabel, 0,3,1,1);
 	//gameLayout->addWidget(new QLabel("Computer"),0,3,1,1);
 	gameLayout->addWidget(currentScore, 1,3,1,1);
-	//gameLayout->addWidget(new QLabel("Draw"), 1,3,1,1);
+	gameLayout->addWidget(endGameButton, 3,3,1,1);
 	setLayout(gameLayout);
 }
 
@@ -429,6 +434,43 @@ LabelClick* Game::createLabel(int i)
 	signalMapper->setMapping(squareLabel,i);
 	connect(squareLabel, SIGNAL(clicked()), signalMapper, SLOT(map()));
 	return squareLabel;
+}
+void Game::endGame()
+{
+	for(int i = 0; i < 3; i++)
+	{
+		scores[i] = 0;
+	}
+
+	QImage emptyImage;
+	emptyImage.load("blank.png");
+	for(int i = 0; i < 9; i++)
+	{
+		squareStatus[i] = 0;
+		boardList[i]->setPixmap(QPixmap::fromImage(emptyImage));
+	}
+	numberOfPlays = 0;
+	QString currentScoreString = "Computer " + QString::number(scores[2]) + "\nPlayer " + QString::number(scores[1]) + "\nDraw " + QString::number(scores[0]);
+	currentScore->setText(currentScoreString);
+	emit endGameSwitchPanes();
+}
+void Game::newGame()
+{
+		for(int i = 0; i < 3; i++)
+	{
+		scores[i] = 0;
+	}
+
+	QImage emptyImage;
+	emptyImage.load("blank.png");
+	for(int i = 0; i < 9; i++)
+	{
+		squareStatus[i] = 0;
+		boardList[i]->setPixmap(QPixmap::fromImage(emptyImage));
+	}
+	numberOfPlays = 0;
+	QString currentScoreString = "Computer " + QString::number(scores[2]) + "\nPlayer " + QString::number(scores[1]) + "\nDraw " + QString::number(scores[0]);
+	currentScore->setText(currentScoreString);
 }
 
 int Game::checkForWinner()
@@ -504,13 +546,18 @@ void Game::buttonClicked(int i)
 {
 		QImage xImage;
 		QImage oImage;
-		oImage.load("go.png");
-		if(currentUser.color == "Red")
+		if(currentUser.color == "Red"){
 			xImage.load("rx.png");
-		else if(currentUser.color == "Blue")
+			oImage.load("ro.png");
+		}
+		else if(currentUser.color == "Blue"){
 			xImage.load("bx.png");
-		else //if(currentUser.color == "Green")
+			oImage.load("bo.png");
+		}
+		else {
 			xImage.load("gx.png");
+			oImage.load("go.png");
+		}
 		bool userPlayed = false;
 		int winner = 0;
 		if(squareStatus[i] == 0) //user plays
@@ -526,7 +573,7 @@ void Game::buttonClicked(int i)
 		{
 			scores[1]++;
 			QMessageBox msgBox;
-			msgBox.setText("Player Wins Game");
+			msgBox.setText("Congratulations, you win!");
 			msgBox.exec();
 			msgBox.show();
 
@@ -563,7 +610,7 @@ void Game::buttonClicked(int i)
 		{
 			scores[0]++;
 			QMessageBox msgBox;
-			msgBox.setText("Tie Game");
+			msgBox.setText("Game drawn.");
 			msgBox.exec();
 			msgBox.show();
 
@@ -581,7 +628,7 @@ void Game::buttonClicked(int i)
 		{
 			scores[2]++;
 			QMessageBox msgBox;
-			msgBox.setText("Computer Wins Game");
+			msgBox.setText("Sorry, you lost. Better luck next time.");
 			msgBox.exec();
 			msgBox.show();
 
