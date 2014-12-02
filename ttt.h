@@ -121,6 +121,8 @@ class Game:public QWidget
 		QSignalMapper *signalMapper;
 		int numberOfPlays;
 		int checkForWinner();
+		QList<int> scores; //index 0 is draws, index 1 is player, index 2 is computer
+		QLabel *currentScore;
 	private slots:
 		void buttonClicked(int);
 };

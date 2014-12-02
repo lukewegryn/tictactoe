@@ -386,11 +386,21 @@ Game::Game(QWidget *parent):QWidget(parent)
 	QGridLayout *gameLayout = new QGridLayout;
 	signalMapper = new QSignalMapper(this);
 	numberOfPlays = 0;
+	QLabel *scoreLabel = new QLabel("Score");
+	scoreLabel->setAlignment(Qt::AlignCenter);
 	for(int i = 0; i < 9; i++)
 	{
 		squareStatus.append(0);
 		boardList.append(createLabel(i));
 	}
+
+	for(int i = 0; i < 3; i++)
+	{
+		scores.append(0);
+	}
+	QString currentScoreString = "Computer " + QString::number(scores[2]) + "\nPlayer " + QString::number(scores[1]) + "\nDraw " + QString::number(scores[0]);
+	currentScore = new QLabel(currentScoreString);
+	currentScore->setAlignment(Qt::AlignCenter);
 	connect(signalMapper, SIGNAL(mapped(int)), this, SLOT(buttonClicked(int)));
 	gameLayout->addWidget(boardList[0],0,0,1,1);
 	gameLayout->addWidget(boardList[1],0,1,1,1);
@@ -401,7 +411,10 @@ Game::Game(QWidget *parent):QWidget(parent)
 	gameLayout->addWidget(boardList[6],2,0,1,1);
 	gameLayout->addWidget(boardList[7],2,1,1,1);
 	gameLayout->addWidget(boardList[8],2,2,1,1);
-	gameLayout->addWidget(new QLabel("Score"), 0,3,1,2);
+	gameLayout->addWidget(scoreLabel, 0,3,1,1);
+	//gameLayout->addWidget(new QLabel("Computer"),0,3,1,1);
+	gameLayout->addWidget(currentScore, 1,3,1,1);
+	//gameLayout->addWidget(new QLabel("Draw"), 1,3,1,1);
 	setLayout(gameLayout);
 }
 
@@ -511,6 +524,7 @@ void Game::buttonClicked(int i)
 
 		if(winner == 1)
 		{
+			scores[1]++;
 			QMessageBox msgBox;
 			msgBox.setText("Player Wins Game");
 			msgBox.exec();
@@ -547,6 +561,7 @@ void Game::buttonClicked(int i)
 
 		else if(numberOfPlays > 8)
 		{
+			scores[0]++;
 			QMessageBox msgBox;
 			msgBox.setText("Tie Game");
 			msgBox.exec();
@@ -564,6 +579,7 @@ void Game::buttonClicked(int i)
 
 		if(winner == 2)
 		{
+			scores[2]++;
 			QMessageBox msgBox;
 			msgBox.setText("Computer Wins Game");
 			msgBox.exec();
@@ -578,6 +594,8 @@ void Game::buttonClicked(int i)
 			}
 			numberOfPlays = 0;
 		}
+		QString currentScoreString = "Computer " + QString::number(scores[2]) + "\nPlayer " + QString::number(scores[1]) + "\nDraw " + QString::number(scores[0]);
+		currentScore->setText(currentScoreString);
 
 
 }
