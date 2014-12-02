@@ -117,7 +117,10 @@ class Game:public QWidget
 		QPushButton* createButton(const QString &text, const char *member);
 		LabelClick* createLabel(int i);
 		QList<LabelClick*> boardList;
+		QList<int> squareStatus; //0 is empty, 1 is X, 2 is O
 		QSignalMapper *signalMapper;
+		int numberOfPlays;
+		int checkForWinner();
 	private slots:
 		void buttonClicked(int);
 };

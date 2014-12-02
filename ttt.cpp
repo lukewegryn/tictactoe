@@ -7,7 +7,6 @@
 #include <QMenuBar>
 #include <QCryptographicHash>
 #include <QFile>
-
 struct User{
 	QString name;
 	QString color;
@@ -386,8 +385,10 @@ Game::Game(QWidget *parent):QWidget(parent)
 {
 	QGridLayout *gameLayout = new QGridLayout;
 	signalMapper = new QSignalMapper(this);
+	numberOfPlays = 0;
 	for(int i = 0; i < 9; i++)
 	{
+		squareStatus.append(0);
 		boardList.append(createLabel(i));
 	}
 	connect(signalMapper, SIGNAL(mapped(int)), this, SLOT(buttonClicked(int)));
@@ -417,26 +418,167 @@ LabelClick* Game::createLabel(int i)
 	return squareLabel;
 }
 
+int Game::checkForWinner()
+{	
+	int winnerResult = 0; //return 0 if no winner, 1 if player wins, 2 if computer wins
+	for(int i = 0; i < 3; i++)
+	{
+		if(squareStatus[i*3] == 1 && squareStatus[i*3+1] == 1 && squareStatus[i*3+2] == 1)
+		{
+			winnerResult = 1;
+		}
+
+		else if(squareStatus[i*3] == 2 && squareStatus[i*3+1] == 2 && squareStatus[i*3+2] == 2)
+		{
+			winnerResult = 2;
+		}
+	}
+
+	if(squareStatus[0] == 1 && squareStatus[3] == 1 && squareStatus[6] == 1)
+	{
+		winnerResult = 1;
+	}
+
+	else if(squareStatus[1] == 1 && squareStatus[4] == 1 && squareStatus[7] == 1)
+	{
+		winnerResult = 1;
+	}
+
+	else if(squareStatus[2] == 1 && squareStatus[5] == 1 && squareStatus[8] == 1)
+	{
+		winnerResult = 1;
+	}
+
+	else if(squareStatus[0] == 2 && squareStatus[3] == 2 && squareStatus[6] == 2)
+	{
+		winnerResult = 2;
+	}
+
+	else if(squareStatus[1] == 2 && squareStatus[4] == 2 && squareStatus[7] == 2)
+	{
+		winnerResult = 2;
+	}
+
+	else if(squareStatus[2] == 2 && squareStatus[5] == 2 && squareStatus[8] == 2)
+	{
+		winnerResult = 2;
+	}
+
+	else if(squareStatus[0] == 1 && squareStatus[4] == 1 && squareStatus[8] == 1)
+	{
+		winnerResult = 1;
+	}
+
+	else if(squareStatus[2] == 1 && squareStatus[4] == 1 && squareStatus[6] == 1)
+	{
+		winnerResult = 1;
+	}
+
+	else if(squareStatus[0] == 2 && squareStatus[4] == 2 && squareStatus[8] == 2)
+	{
+		winnerResult = 2;
+	}
+
+	else if(squareStatus[2] == 2 && squareStatus[4] == 2 && squareStatus[6] == 2)
+	{
+		winnerResult = 2;
+	}
+
+	return winnerResult;
+}
+
 void Game::buttonClicked(int i)
 {
-		/*QMessageBox msgBox;
-		QString text;
-		text.append("You clicked box ");
-		text.append(QString::number(i));
-		text.append(" !");
-		//text << "You clicked box "  << i << " !";
-		msgBox.setText(text);
-		msgBox.exec();
-		msgBox.show();*/
 		QImage xImage;
+		QImage oImage;
+		oImage.load("go.png");
 		if(currentUser.color == "Red")
 			xImage.load("rx.png");
 		else if(currentUser.color == "Blue")
 			xImage.load("bx.png");
 		else //if(currentUser.color == "Green")
 			xImage.load("gx.png");
-		
-		boardList[i]->setPixmap(QPixmap::fromImage(xImage));
+		bool userPlayed = false;
+		int winner = 0;
+		if(squareStatus[i] == 0) //user plays
+		{
+			boardList[i]->setPixmap(QPixmap::fromImage(xImage));
+			squareStatus[i] = 1;
+			userPlayed = true;
+			numberOfPlays++;
+			winner = checkForWinner();
+		}
+
+		if(winner == 1)
+		{
+			QMessageBox msgBox;
+			msgBox.setText("Player Wins Game");
+			msgBox.exec();
+			msgBox.show();
+
+			QImage emptyImage;
+			emptyImage.load("blank.png");
+			for(int i = 0; i < 9; i++)
+			{
+				squareStatus[i] = 0;
+				boardList[i]->setPixmap(QPixmap::fromImage(emptyImage));
+			}
+			numberOfPlays = 0;
+		}
+
+		else if(userPlayed && numberOfPlays <=8) //computer plays
+		{	
+			bool computerHasPlayed = false;
+			while(!computerHasPlayed)
+			{
+				int randomNumber = qrand()%(9);
+				if(squareStatus[randomNumber] == 0)
+				{
+					boardList[randomNumber]->setPixmap(QPixmap::fromImage(oImage));
+					squareStatus[randomNumber] = 2;
+					computerHasPlayed = true;
+					numberOfPlays++;
+					winner = checkForWinner();
+
+				}
+				
+			}
+		}
+
+		else if(numberOfPlays > 8)
+		{
+			QMessageBox msgBox;
+			msgBox.setText("Tie Game");
+			msgBox.exec();
+			msgBox.show();
+
+			QImage emptyImage;
+			emptyImage.load("blank.png");
+			for(int i = 0; i < 9; i++)
+			{
+				squareStatus[i] = 0;
+				boardList[i]->setPixmap(QPixmap::fromImage(emptyImage));
+			}
+			numberOfPlays = 0;
+		}
+
+		if(winner == 2)
+		{
+			QMessageBox msgBox;
+			msgBox.setText("Computer Wins Game");
+			msgBox.exec();
+			msgBox.show();
+
+			QImage emptyImage;
+			emptyImage.load("blank.png");
+			for(int i = 0; i < 9; i++)
+			{
+				squareStatus[i] = 0;
+				boardList[i]->setPixmap(QPixmap::fromImage(emptyImage));
+			}
+			numberOfPlays = 0;
+		}
+
 
 }
 
