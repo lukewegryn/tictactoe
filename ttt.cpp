@@ -1,3 +1,13 @@
+/* Luke Wegryn
+*  9057-39535
+*  lwegryn Assignment 8
+*
+*  Extra Credit: I implemented an algorithm that will attempt to block the player whenever possible. If you attempt
+*  				to play 2 X's in a row, it will put an O in the third spot. If there are two ways for you to make
+*				3 in a row, it will attempt to block one of the paths. SINCE A GAME THAT ALWAYS ENDS IN A TIE IS BORING			
+*				I DECIDED NOT TO MAKE IT IMPOSSIBLE FOR THE PLAYER TO WIN.			
+*				
+*/
 #include "ttt.h"
 #include "QStreamThreaded.h"
 #include <QtWidgets>
@@ -27,11 +37,12 @@ MainWindow::MainWindow(QWidget *parent):QWidget(parent)
 	QMenu *gameMenu = new QMenu(tr("&Game"), this);
 	QMenu* editMenu = new QMenu(tr("&Edit"), this);
 
-	QAction *registerAction = userMenu->addAction(tr("Register User"));
-	QAction *logoutAction = userMenu->addAction(tr("Logout User"));
-	QAction *newGameAction = gameMenu->addAction(tr("New Game"));
-	QAction *endGameAction = gameMenu->addAction(tr("End Game"));
-	QAction *changePasswordAction = editMenu->addAction(tr("Change Password"));
+	registerAction = userMenu->addAction(tr("Register User"));
+	logoutAction = userMenu->addAction(tr("Logout User"));
+	exitAction = userMenu->addAction(tr("Exit"));
+	newGameAction = gameMenu->addAction(tr("New Game"));
+	endGameAction = gameMenu->addAction(tr("End Game"));
+	changePasswordAction = editMenu->addAction(tr("Change Password"));
 	//QAction *exitAction = userMenu->addAction(tr("E&xit"));
 	menuBar->addMenu(userMenu);
 	menuBar->addMenu(gameMenu);
@@ -47,8 +58,17 @@ MainWindow::MainWindow(QWidget *parent):QWidget(parent)
 
 	stackedWidget = new QStackedWidget;
 
+	//disable enable action buttons
+	registerAction->setEnabled(true);
+	logoutAction->setEnabled(false);
+	exitAction->setEnabled(true);
+	newGameAction->setEnabled(false);
+	endGameAction->setEnabled(false);
+	changePasswordAction->setEnabled(false);
+
 	connect(myLogin, SIGNAL(exitClicked()), this, SLOT(exitMain()));
 	connect(myLogin, SIGNAL(loginSuccessful()), this, SLOT(switchToWelcome()));
+	connect(exitAction, SIGNAL(triggered()), this, SLOT(exitMain()));
 	connect(myWelcome, SIGNAL(exitClicked()), this, SLOT(exitMain()));
 	connect(myWelcome, SIGNAL(changePasswordClicked()), this, SLOT(switchToChangePassword()));
 	connect(myChangePassword, SIGNAL(cancelClicked()), this, SLOT(switchToWelcome()));
@@ -66,6 +86,7 @@ MainWindow::MainWindow(QWidget *parent):QWidget(parent)
 	connect(myRegister, SIGNAL(goWriteDatabaseToFile()), this, SLOT(writeDatabaseToFile()));
 	connect(myGame, SIGNAL(endGameSwitchPanes()), this, SLOT(switchToWelcome()));
 	connect(newGameAction, SIGNAL(triggered()), myGame, SLOT(newGame()));
+	connect(newGameAction, SIGNAL(triggered()), this, SLOT(switchToGame()));
 	connect(endGameAction, SIGNAL(triggered()), myGame, SLOT(endGame()));
 	stackedWidget->addWidget(myLogin);
 	stackedWidget->addWidget(myWelcome);
@@ -88,40 +109,78 @@ void MainWindow::exitMain()
 
 void MainWindow::switchToLogin()
 {
+	currentUser.name = "";
+	currentUser.color = "";
 	emit clearLogin();
 	emit clearRegister();
 	stackedWidget->setCurrentIndex(0);
+	registerAction->setEnabled(true);
+	logoutAction->setEnabled(false);
+	exitAction->setEnabled(true);
+	newGameAction->setEnabled(false);
+	endGameAction->setEnabled(false);
+	changePasswordAction->setEnabled(false);
+
 }
 
 void MainWindow::switchToWelcome()
 {
-	emit clearLogin();
-	emit clearChangePassword();
-	myWelcome->setText(currentUser.name);
-	stackedWidget->setCurrentIndex(1);
+	if(currentUser.name != NULL)
+	{
+		emit clearLogin();
+		emit clearChangePassword();
+		myWelcome->setText(currentUser.name);
+		stackedWidget->setCurrentIndex(1);
+
+		registerAction->setEnabled(false);
+		logoutAction->setEnabled(true);
+		exitAction->setEnabled(true);
+		newGameAction->setEnabled(true);
+		endGameAction->setEnabled(false);
+		changePasswordAction->setEnabled(true);
+	}
+
 }
 
 void MainWindow::switchToChangePassword()
 {
 	if(currentUser.name != NULL)
-		stackedWidget->setCurrentIndex(2);
-	else
 	{
-		QMessageBox msgBox;
-		msgBox.setText("You need to log in before you can change the password!");
-		msgBox.exec();
-		msgBox.show();
+		stackedWidget->setCurrentIndex(2);
+		registerAction->setEnabled(false);
+		logoutAction->setEnabled(true);
+		exitAction->setEnabled(true);
+		newGameAction->setEnabled(false);
+		endGameAction->setEnabled(false);
+		changePasswordAction->setEnabled(false);
 	}
 }
 
 void MainWindow::switchToRegister()
 {
 	stackedWidget->setCurrentIndex(3);
+	registerAction->setEnabled(false);
+	logoutAction->setEnabled(false);
+	exitAction->setEnabled(true);
+	newGameAction->setEnabled(false);
+	endGameAction->setEnabled(false);
+	changePasswordAction->setEnabled(false);
 }
 
 void MainWindow::switchToGame()
 {
-	stackedWidget->setCurrentIndex(4);
+	if(currentUser.name != NULL)
+	{
+		stackedWidget->setCurrentIndex(4);
+
+		registerAction->setEnabled(false);
+		logoutAction->setEnabled(true);
+		exitAction->setEnabled(true);
+		newGameAction->setEnabled(false);
+		endGameAction->setEnabled(true);
+		changePasswordAction->setEnabled(false);
+	}
+
 }
 
 void MainWindow::insertToDataStream()
@@ -282,21 +341,30 @@ Welcome::Welcome(QWidget *parent):QWidget(parent)
 	myLabel = new QLabel(labelString);
 	welcomeLayout = new QGridLayout;
 
+	QFont font = myLabel->font();
+	font.setPointSize(12);
+	font.setBold(true);
+	myLabel->setFont(font);
+	//myLabel->setAlignment(Qt::AlignRight);
+
 	QPushButton *changePasswordButton = createButton(tr("Change Password"),SIGNAL(changePasswordClicked()));
 	QPushButton *startGameButton = createButton(tr("Start Game"),SIGNAL(startGameClicked()));
 	QPushButton *exitButton = createButton(tr("Exit"),SIGNAL(exitClicked()));
-
-	welcomeLayout->addWidget(myLabel,0,2,1,3);
-	welcomeLayout->addWidget(changePasswordButton, 1, 1, 1, 1);
-	welcomeLayout->addWidget(startGameButton, 1, 2, 1, 1);
-	welcomeLayout->addWidget(exitButton, 1, 3, 1, 1);
+	//welcomeLayout->setColumnMinimumWidth(0, 50);
+	//welcomeLayout->setColumnMinimumWidth(0, 200);
+	//welcomeLayout->setColumnMinimumWidth(, 100);
+	//welcomeLayout->setColumnMinimumWidth(2, 110);
+	welcomeLayout->addWidget(myLabel,0,1,1,1);
+	welcomeLayout->addWidget(changePasswordButton, 1, 0, 1, 1);
+	welcomeLayout->addWidget(startGameButton, 1, 1, 1, 1);
+	welcomeLayout->addWidget(exitButton, 1, 2, 1, 1);
 	setLayout(welcomeLayout);
 	
 }
 
 void Welcome::setText(QString value)
 {
-	myLabel->setText("Welcome, " + value + " Color: " + currentUser.color);
+	myLabel->setText("Welcome, " + value + ".");
 }
 
 QPushButton *Welcome::createButton(const QString &text, const char *member)
@@ -542,6 +610,133 @@ int Game::checkForWinner()
 	return winnerResult;
 }
 
+int Game::determineComputerMove()
+{
+	int nextMove = -1;
+	//horizontals
+	for(int i = 0; i < 3; i++)
+	{
+		if(squareStatus[i*3] == 1 && squareStatus[i*3+1] == 1 && squareStatus[i*3+2] == 0)
+		{
+			nextMove = i*3+2;
+		}
+	}
+
+	if(squareStatus[1] == 1 && squareStatus[2] == 1 && squareStatus[0] == 0)
+	{
+		nextMove = 0;
+	}
+
+	else if(squareStatus[0] == 1 && squareStatus[2] == 1 && squareStatus[1] == 0)
+	{
+		nextMove = 1;
+	}
+
+	else if(squareStatus[4] == 1 && squareStatus[5] == 1 && squareStatus[3] == 0)
+	{
+		nextMove = 3;
+	}
+
+	else if(squareStatus[3] == 1 && squareStatus[5] == 1 && squareStatus[4] == 0)
+	{
+		nextMove = 4;
+	}
+
+	else if(squareStatus[7] == 1 && squareStatus[8] == 1 && squareStatus[6] == 0)
+	{
+		nextMove = 6;
+	}
+
+	else if(squareStatus[6] == 1 && squareStatus[8] == 1 && squareStatus[7] == 0)
+	{
+		nextMove = 7;
+	}
+
+	//diagonals
+	else if(squareStatus[0] == 1 && squareStatus[4] == 1 && squareStatus[8] == 0)
+	{
+		nextMove = 8;
+	}
+
+	else if(squareStatus[0] == 1 && squareStatus[8] == 1 && squareStatus[4] == 0)
+	{
+		nextMove = 4;
+	}
+
+	else if(squareStatus[4] == 1 && squareStatus[8] == 1 && squareStatus[0] == 0)
+	{
+		nextMove = 0;
+	}
+
+	else if(squareStatus[2] == 1 && squareStatus[4] == 1 && squareStatus[6] == 0)
+	{
+		nextMove = 6;
+	}
+
+	else if(squareStatus[2] == 1 && squareStatus[6] == 1 && squareStatus[4] == 0)
+	{
+		nextMove = 4;
+	}
+
+	else if(squareStatus[4] == 1 && squareStatus[6] == 1 && squareStatus[2] == 0) 
+	{
+		nextMove = 2;
+	}
+
+	/************Here is the vertical logic*******************/
+	//column 1
+	else if(squareStatus[0] == 1 && squareStatus[3] == 1 && squareStatus[6] == 0)
+	{
+		nextMove = 6;
+	}
+
+	else if(squareStatus[0] == 1 && squareStatus[6] == 1 && squareStatus[3] == 0)
+	{
+		nextMove = 3;
+	}
+
+	else if(squareStatus[3] == 1 && squareStatus[6] == 1 && squareStatus[0] == 0)
+	{
+		nextMove = 0;
+	}
+
+	//column 2
+
+	else if(squareStatus[1] == 1 && squareStatus[4] == 1 && squareStatus[7] == 0)
+	{
+		nextMove = 7;
+	}
+
+	else if(squareStatus[4] == 1 && squareStatus[7] == 1 && squareStatus[1] == 0)
+	{
+		nextMove = 1;
+	}
+
+	else if(squareStatus[1] == 1 && squareStatus[7] == 1 && squareStatus[4] == 0)
+	{
+		nextMove = 4;
+	}
+
+	//column 3
+
+	else if(squareStatus[2] == 1 && squareStatus[8] == 1 && squareStatus[5] == 0)
+	{
+		nextMove = 5;
+	}
+
+	else if(squareStatus[2] == 1 && squareStatus[5] == 1 && squareStatus[8] == 0)
+	{
+		nextMove = 8;
+	}
+
+	else if(squareStatus[5] == 1 && squareStatus[8] == 1 && squareStatus[2] == 0)
+	{
+		nextMove = 2;
+	}
+
+	return nextMove;
+}
+
 void Game::buttonClicked(int i)
 {
 		QImage xImage;
@@ -590,19 +785,31 @@ void Game::buttonClicked(int i)
 		else if(userPlayed && numberOfPlays <=8) //computer plays
 		{	
 			bool computerHasPlayed = false;
-			while(!computerHasPlayed)
+			if(determineComputerMove() != -1)
 			{
-				int randomNumber = qrand()%(9);
-				if(squareStatus[randomNumber] == 0)
+				int nextMove = determineComputerMove();
+				boardList[nextMove]->setPixmap(QPixmap::fromImage(oImage));
+				squareStatus[nextMove] = 2;
+				computerHasPlayed = true;
+				numberOfPlays++;
+				winner = checkForWinner();
+			}
+			else
+			{
+				while(!computerHasPlayed)
 				{
-					boardList[randomNumber]->setPixmap(QPixmap::fromImage(oImage));
-					squareStatus[randomNumber] = 2;
-					computerHasPlayed = true;
-					numberOfPlays++;
-					winner = checkForWinner();
+					int randomNumber = qrand()%(9);
+					if(squareStatus[randomNumber] == 0)
+					{
+						boardList[randomNumber]->setPixmap(QPixmap::fromImage(oImage));
+						squareStatus[randomNumber] = 2;
+						computerHasPlayed = true;
+						numberOfPlays++;
+						winner = checkForWinner();
 
-				}
+					}
 				
+				}
 			}
 		}
 

@@ -1,3 +1,12 @@
+/* Luke Wegryn
+*  9057-39535
+*  lwegryn Assignment 8
+*
+*  Extra Credit: I implemented an algorithm that will attempt to block the player whenever possible. If you attempt
+*  				to play 2 X's in a row, it will put an O in the third spot. If there are two ways for you to make
+*				3 in a row, it will attempt to block one of the paths. SINCE A GAME THAT ALWAYS ENDS IN A TIE IS BORING			
+*				I DECIDED NOT TO MAKE IT IMPOSSIBLE FOR THE PLAYER TO WIN.
+*/
 #ifndef TTT_H
 #define TTT_H
 #include <QtWidgets>
@@ -123,6 +132,7 @@ class Game:public QWidget
 		int checkForWinner();
 		QList<int> scores; //index 0 is draws, index 1 is player, index 2 is computer
 		QLabel *currentScore;
+		int determineComputerMove();
 	private slots:
 		void buttonClicked(int);
 		void endGame();
@@ -145,6 +155,12 @@ class MainWindow:public QWidget
 		//QDataStream *outStream;
 		void insertToDataStream();
 		void extractFromDataStream();
+		QAction *registerAction;
+		QAction *logoutAction;
+		QAction *newGameAction;
+		QAction *endGameAction;
+		QAction *changePasswordAction;
+		QAction *exitAction;
 	private slots:
 		void exitMain();
 		void switchToWelcome();
